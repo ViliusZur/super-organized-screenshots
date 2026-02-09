@@ -41,6 +41,8 @@ final class AppState: ObservableObject {
         let screenshot = try await screenshotStore.save(image: image)
         screenshots.insert(screenshot, at: 0)
         NSSound(named: "Grab")?.play()
+        copyToClipboard(screenshot)
+        sendScreenshotNotification(for: screenshot)
         return screenshot
     }
 
@@ -52,7 +54,23 @@ final class AppState: ObservableObject {
         let screenshot = try await screenshotStore.save(image: image)
         screenshots.insert(screenshot, at: 0)
         NSSound(named: "Grab")?.play()
+        copyToClipboard(screenshot)
+        sendScreenshotNotification(for: screenshot)
         return screenshot
+    }
+
+    private func copyToClipboard(_ screenshot: Screenshot) {
+        guard let image = NSImage(contentsOf: screenshot.url) else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([image])
+    }
+
+    private func sendScreenshotNotification(for screenshot: Screenshot) {
+        guard UserPreferences.shared.showNotification else { return }
+
+        let panel = ScreenshotNotificationPanel(screenshot: screenshot)
+        panel.show()
     }
 
     func deleteScreenshot(_ screenshot: Screenshot) async throws {

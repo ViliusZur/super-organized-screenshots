@@ -54,15 +54,9 @@ final class ImageEditorViewModel: ObservableObject {
         image.draw(in: NSRect(origin: .zero, size: size))
 
         if let context = NSGraphicsContext.current?.cgContext {
-            context.saveGState()
-            context.translateBy(x: 0, y: size.height)
-            context.scaleBy(x: 1, y: -1)
-
             for annotation in annotations {
                 annotation.render(in: context, scale: 1.0)
             }
-
-            context.restoreGState()
         }
 
         finalImage.unlockFocus()

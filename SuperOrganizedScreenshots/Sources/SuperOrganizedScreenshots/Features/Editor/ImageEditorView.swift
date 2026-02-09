@@ -4,7 +4,6 @@ struct ImageEditorView: View {
     @StateObject private var viewModel: ImageEditorViewModel
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @State private var showingDiscardAlert = false
 
     init(screenshot: Screenshot) {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(screenshot: screenshot))
@@ -21,11 +20,7 @@ struct ImageEditorView: View {
         .toolbar {
             ToolbarItemGroup(placement: .cancellationAction) {
                 Button("Cancel") {
-                    if viewModel.hasUnsavedChanges {
-                        showingDiscardAlert = true
-                    } else {
-                        dismiss()
-                    }
+                    dismiss()
                 }
             }
 
@@ -48,20 +43,19 @@ struct ImageEditorView: View {
             }
 
             ToolbarItemGroup(placement: .confirmationAction) {
+                Button {
+                    copyToClipboard()
+                } label: {
+                    Label("Copy to Clipboard", systemImage: "doc.on.doc")
+                }
+                .help("Copy image with edits to clipboard")
+
                 Button("Save") {
                     saveAndDismiss()
                 }
                 .disabled(!viewModel.hasUnsavedChanges)
                 .keyboardShortcut("s", modifiers: .command)
             }
-        }
-        .alert("Discard Changes?", isPresented: $showingDiscardAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Discard", role: .destructive) {
-                dismiss()
-            }
-        } message: {
-            Text("You have unsaved changes that will be lost.")
         }
     }
 
@@ -151,6 +145,14 @@ struct ImageEditorView: View {
     private var canvasArea: some View {
         CanvasView(viewModel: viewModel)
             .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    private func copyToClipboard() {
+        let image = viewModel.renderFinalImage()
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([image])
+        dismiss()
     }
 
     private func saveAndDismiss() {

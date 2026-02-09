@@ -64,10 +64,10 @@ final class ScreenshotModeCoordinator {
 
     func captureFullScreen() {
         dismissAllWindows()
+        NSApp.hide(nil)
 
         Task {
-            // Wait for windows to fully disappear
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 200_000_000)
 
             do {
                 _ = try await AppState.shared.captureFullScreen()
@@ -86,9 +86,10 @@ final class ScreenshotModeCoordinator {
 
     private func handleSelectionComplete(rect: CGRect, displayID: CGDirectDisplayID) {
         dismissAllWindows()
+        NSApp.hide(nil)
 
         Task {
-            try? await Task.sleep(nanoseconds: 150_000_000)
+            try? await Task.sleep(nanoseconds: 200_000_000)
 
             do {
                 _ = try await AppState.shared.captureSelection(rect: rect, displayID: displayID)

@@ -30,7 +30,7 @@ struct ArrowAnnotation: Annotation {
         context.strokePath()
 
         let angle = atan2(end.y - start.y, end.x - start.x)
-        let arrowLength: CGFloat = 15 * scale
+        let arrowLength: CGFloat = (8 + strokeWidth * 2) * scale
         let arrowAngle: CGFloat = .pi / 6
 
         let point1 = CGPoint(
