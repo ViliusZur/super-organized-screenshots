@@ -20,18 +20,24 @@ struct ArrowAnnotation: Annotation {
         let start = CGPoint(x: startPoint.x * scale, y: startPoint.y * scale)
         let end = CGPoint(x: endPoint.x * scale, y: endPoint.y * scale)
 
+        let angle = atan2(end.y - start.y, end.x - start.x)
+        let arrowLength: CGFloat = (8 + strokeWidth * 2) * scale
+        let arrowAngle: CGFloat = .pi / 6
+
+        // Shorten the line to stop at the arrowhead base
+        let lineEnd = CGPoint(
+            x: end.x - arrowLength * cos(angle),
+            y: end.y - arrowLength * sin(angle)
+        )
+
         context.setStrokeColor(color.cgColor)
         context.setFillColor(color.cgColor)
         context.setLineWidth(strokeWidth * scale)
         context.setLineCap(.round)
 
         context.move(to: start)
-        context.addLine(to: end)
+        context.addLine(to: lineEnd)
         context.strokePath()
-
-        let angle = atan2(end.y - start.y, end.x - start.x)
-        let arrowLength: CGFloat = (8 + strokeWidth * 2) * scale
-        let arrowAngle: CGFloat = .pi / 6
 
         let point1 = CGPoint(
             x: end.x - arrowLength * cos(angle - arrowAngle),
