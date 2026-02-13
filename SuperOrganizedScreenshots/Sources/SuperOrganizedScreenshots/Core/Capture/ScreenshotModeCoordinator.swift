@@ -7,6 +7,8 @@ final class ScreenshotModeCoordinator {
     private var overlayWindows: [SelectionOverlayWindow] = []
     private var toolbarPanel: ScreenshotToolbarPanel?
     private var isActive = false
+    /// Display to use for full-screen capture (screen where toolbar was shown / under cursor when mode activated).
+    private var fullScreenTargetDisplayID: CGDirectDisplayID?
 
     private init() {}
 
@@ -32,9 +34,10 @@ final class ScreenshotModeCoordinator {
             overlay.orderFrontRegardless()
         }
 
-        // Create toolbar on the screen with the mouse cursor
+        // Create toolbar on the screen with the mouse cursor (used for full-screen capture target)
         let mouseScreen = NSScreen.screens.first(where: { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) })
             ?? NSScreen.main ?? NSScreen.screens[0]
+        fullScreenTargetDisplayID = mouseScreen.displayID
 
         toolbarPanel = ScreenshotToolbarPanel(on: mouseScreen)
         toolbarPanel?.orderFrontRegardless()
@@ -70,7 +73,7 @@ final class ScreenshotModeCoordinator {
             try? await Task.sleep(nanoseconds: 200_000_000)
 
             do {
-                _ = try await AppState.shared.captureFullScreen()
+                _ = try await AppState.shared.captureFullScreen(displayID: self.fullScreenTargetDisplayID)
             } catch {
                 print("Full screen capture failed: \(error.localizedDescription)")
             }

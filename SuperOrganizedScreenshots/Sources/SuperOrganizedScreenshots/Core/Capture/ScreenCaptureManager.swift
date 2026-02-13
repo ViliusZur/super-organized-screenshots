@@ -45,13 +45,24 @@ final class ScreenCaptureManager {
     func captureRegion(rect: CGRect, displayID: CGDirectDisplayID? = nil) async throws -> CGImage {
         let fullImage = try await captureFullScreen(displayID: displayID)
 
-        let scale = CGFloat(fullImage.width) / CGFloat(NSScreen.main?.frame.width ?? CGFloat(fullImage.width))
+        // Rect is in global (Cocoa) coordinates; get this display's frame in the same coordinate system.
+        let displayFrame = displayFrameInGlobalCoordinates(for: displayID)
+        let scale = CGFloat(fullImage.width) / displayFrame.width
 
+        // Convert to display-local coordinates (same origin as captured image: bottom-left of this display).
+        let localRect = CGRect(
+            x: rect.origin.x - displayFrame.origin.x,
+            y: rect.origin.y - displayFrame.origin.y,
+            width: rect.width,
+            height: rect.height
+        )
+
+        // Convert to image coordinates (top-left origin) and scale to pixel dimensions.
         let scaledRect = CGRect(
-            x: rect.origin.x * scale,
-            y: CGFloat(fullImage.height) - (rect.origin.y + rect.height) * scale,
-            width: rect.width * scale,
-            height: rect.height * scale
+            x: localRect.origin.x * scale,
+            y: CGFloat(fullImage.height) - (localRect.origin.y + localRect.height) * scale,
+            width: localRect.width * scale,
+            height: localRect.height * scale
         )
 
         guard let croppedImage = fullImage.cropping(to: scaledRect) else {
@@ -59,6 +70,15 @@ final class ScreenCaptureManager {
         }
 
         return croppedImage
+    }
+
+    /// Returns the display's frame in global Cocoa coordinates (origin bottom-left) for the given display ID.
+    private func displayFrameInGlobalCoordinates(for displayID: CGDirectDisplayID?) -> CGRect {
+        if let id = displayID,
+           let screen = NSScreen.screens.first(where: { $0.displayID == id }) {
+            return screen.frame
+        }
+        return NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
     }
 
     func getAvailableDisplays() async throws -> [SCDisplay] {

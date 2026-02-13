@@ -33,11 +33,11 @@ final class AppState: ObservableObject {
         screenshots = await screenshotStore.loadAllScreenshots()
     }
 
-    func captureFullScreen() async throws -> Screenshot {
+    func captureFullScreen(displayID: CGDirectDisplayID? = nil) async throws -> Screenshot {
         isCapturing = true
         defer { isCapturing = false }
 
-        let image = try await captureManager.captureFullScreen()
+        let image = try await captureManager.captureFullScreen(displayID: displayID)
         let screenshot = try await screenshotStore.save(image: image)
         screenshots.insert(screenshot, at: 0)
         NSSound(named: "Grab")?.play()
